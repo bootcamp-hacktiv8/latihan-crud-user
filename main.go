@@ -42,18 +42,6 @@ var users = map[int]entity.User{
 		Email:    "abdurrahman@gmail.com",
 		Password: "abdurrahman",
 	},
-	3: {
-		ID:       3,
-		Username: "eko",
-		Email:    "eko@gmail.com",
-		Password: "eko",
-	},
-	4: {
-		ID:       4,
-		Username: "sam",
-		Email:    "sam@Gmail.com",
-		Password: "sam",
-	},
 }
 
 var PORT = ":8080"
@@ -119,9 +107,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "DELETE" {
 		paths := strings.Split(r.URL.Path[1:], "/")
-
 		id, _ := strconv.Atoi(paths[1])
-
 		delete(users, id)
 	}
 }
