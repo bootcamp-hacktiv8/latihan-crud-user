@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"final-project/entity"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
-	"strings"
+	"time"
+
+	"github.com/gorilla/mux"
 )
 
 // func main() {
@@ -47,31 +50,38 @@ var users = map[int]entity.User{
 var PORT = ":8080"
 
 func main() {
-	http.HandleFunc("/users/", UserHandler)
+	r := mux.NewRouter()
+	r.HandleFunc("/users/", UserHandler)
+	r.HandleFunc("/users/{id}", UserHandler)
 
 	fmt.Println("Application is listening on port", PORT)
-	http.ListenAndServe(PORT, nil)
+
+	srv := &http.Server{
+		Handler: r,
+		Addr:    "0.0.0.0:8080",
+		// Good practice: enforce timeouts for servers you create!
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+
+	log.Fatal(srv.ListenAndServe())
 }
 
 func UserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	if r.Method == "GET" {
-		fmt.Println(r.URL.Path[1:])
-		paths := strings.Split(r.URL.Path[1:], "/")
-		fmt.Printf("%+v + \n", paths)
+	params := mux.Vars(r)
+	id := params["id"]
+	fmt.Println(id)
 
-		if len(paths) == 2 && paths[1] != "" {
-			fmt.Println(paths[1])
-			if ID, err := strconv.Atoi(paths[1]); err == nil {
-				fmt.Println(users[ID])
+	if r.Method == "GET" {
+		if id != "" {
+			if ID, err := strconv.Atoi(id); err == nil {
 				jsonData, _ := json.Marshal(users[ID])
-				w.Header().Add("Content-Type", "application/json")
 				w.Write(jsonData)
 			}
 		} else {
 			jsonData, _ := json.Marshal(&users)
-			w.Header().Add("Content-Type", "application/json")
 			w.Write(jsonData)
 		}
 	}
@@ -106,8 +116,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "DELETE" {
-		paths := strings.Split(r.URL.Path[1:], "/")
-		id, _ := strconv.Atoi(paths[1])
-		delete(users, id)
+		idInt, _ := strconv.Atoi(id)
+		delete(users, idInt)
 	}
 }
